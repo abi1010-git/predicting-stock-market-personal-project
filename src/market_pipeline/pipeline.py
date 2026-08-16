@@ -19,8 +19,9 @@ from typing import Iterable
 API_URL = "https://www.alphavantage.co/query"
 DEFAULT_SYMBOLS = ("SPY", "QQQ", "IWM", "AAPL", "NVDA")
 RAW_FIELDS = ("date", "symbol", "open", "high", "low", "close", "adjusted_close", "volume")
+PROVENANCE_FIELD = "source"
 FEATURE_FIELDS = ("daily_return", "range_pct", "sma_20", "sma_50", "volatility_20d")
-ALL_FIELDS = RAW_FIELDS + FEATURE_FIELDS
+ALL_FIELDS = RAW_FIELDS + (PROVENANCE_FIELD,) + FEATURE_FIELDS
 
 
 class PipelineError(RuntimeError):
@@ -96,6 +97,7 @@ def parse_alpha_vantage_csv(payload: str, symbol: str) -> list[dict[str, object]
                 # model-facing field so the source can be upgraded independently.
                 "adjusted_close": close,
                 "volume": volume,
+                "source": "alpha_vantage",
             }
         )
     if not rows:
@@ -184,6 +186,7 @@ def read_existing_raw(path: Path, symbol: str) -> list[dict[str, object]]:
                     "close": _number(source["close"], "close", symbol),
                     "adjusted_close": _number(source["adjusted_close"], "adjusted_close", symbol),
                     "volume": int(_number(source["volume"], "volume", symbol)),
+                    "source": source.get("source") or "legacy_unknown",
                 }
             )
     return rows

@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-08-16T19:56:20+00:00",
+  "overlap_policy": "Alpha Vantage rows take precedence",
+  "provider": "Yahoo Finance chart endpoint",
+  "purpose": "one-time historical research backfill",
+  "start": "2010-01-01",
+  "symbol_rows": {
+    "AAPL": 4179,
+    "IWM": 4179,
+    "NVDA": 4179,
+    "QQQ": 4179,
+    "SPY": 4179
+  }
+}

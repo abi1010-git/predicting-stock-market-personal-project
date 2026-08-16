@@ -17,7 +17,7 @@ Every weekday after the regular US market close, GitHub Actions:
 5. Updates `metadata/data_quality.json` with row counts and quality checks.
 6. Commits only when the market dataset actually changed.
 
-The default universe is `SPY`, `QQQ`, `IWM`, `AAPL`, and `NVDA`. Alpha Vantage's compact response provides the latest 100 observations; scheduled runs preserve a growing, versioned history in Git.
+The default universe is `SPY`, `QQQ`, `IWM`, `AAPL`, and `NVDA`. A one-time Yahoo Finance backfill supplies daily history from 2010, while Alpha Vantage's compact response supplies ongoing daily updates. Overlapping Alpha Vantage rows take precedence, and every row records its source.
 
 ## Repository layout
 
@@ -59,6 +59,7 @@ For automation, create a GitHub Actions repository secret named `ALPHA_VANTAGE_A
 | `date`, `symbol` | Trading date and ticker |
 | `open`, `high`, `low`, `close`, `volume` | Daily market observations |
 | `adjusted_close` | Currently equal to close because the free daily endpoint is unadjusted |
+| `source` | `yahoo_finance_backfill`, `alpha_vantage`, or a legacy provenance marker |
 | `daily_return` | Close-to-close fractional return |
 | `range_pct` | `(high - low) / close` |
 | `sma_20`, `sma_50` | Trailing simple moving averages |
@@ -99,10 +100,14 @@ models/five_day_evaluation.json
 models/five_day_predictions.csv
 ```
 
-The weekly GitHub workflow will report `insufficient_data` until at least 200 complete model rows exist. This safeguard prevents a small initial API response from being presented as meaningful evidence.
+The weekly GitHub workflow reports `insufficient_data` until at least 200 complete model rows exist. The historical backfill now clears that minimum, while the safeguard remains in place for new or incomplete datasets.
 
 Evaluation includes accuracy, balanced accuracy, ROC-AUC, log loss, model exposure, trade count, strategy return, and a same-period SPY buy-and-hold comparison. Results remain exploratory because overlapping labels, market regime changes, taxes, slippage, and unadjusted prices can materially affect conclusions.
 
 ## Scope and limitations
 
-This repository is an educational data-engineering and machine-learning project, not financial advice or a trading system. It does not claim that historical predictive performance will continue. Alpha Vantage's daily endpoint is unadjusted, so splits can create discontinuities until an adjusted data source is added.
+This repository is an educational data-engineering and machine-learning project, not financial advice or a trading system. It does not claim that historical predictive performance will continue. Yahoo Finance and Alpha Vantage can differ in adjustment methodology, timing, and corrections; source provenance and the overlap policy make that limitation auditable.
+
+## Research website
+
+The `website/` directory contains the SignalFive research dashboard. It presents the pipeline, models, walk-forward validation design, current dataset health, and out-of-sample metrics in a modern finance interface with scroll-triggered diagrams. The production site is private by default.

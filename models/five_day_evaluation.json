@@ -1,0 +1,91 @@
+{
+  "config": {
+    "horizon": 5,
+    "minimum_model_rows": 200,
+    "probability_threshold": 0.55,
+    "random_seed": 42,
+    "splits": 5,
+    "transaction_cost_bps": 5.0
+  },
+  "features": [
+    "return_1d",
+    "return_2d",
+    "return_5d",
+    "return_10d",
+    "return_20d",
+    "range_pct",
+    "price_vs_sma20",
+    "price_vs_sma50",
+    "sma_ratio",
+    "volatility_20d",
+    "volume_change_1d",
+    "volume_zscore_20d"
+  ],
+  "first_model_date": "2010-03-16",
+  "last_model_date": "2026-08-07",
+  "model_rows": 4125,
+  "models": {
+    "catboost": {
+      "backtest": {
+        "buy_hold_total_return": 4.425914181855144,
+        "exposure": 0.653566229985444,
+        "periods": 687,
+        "strategy_total_return": 2.3899612316437078,
+        "trades": 227
+      },
+      "classification": {
+        "accuracy": 0.5583697234352256,
+        "balanced_accuracy": 0.5043891444322554,
+        "log_loss": 0.7262564017246453,
+        "roc_auc": 0.5131813331451508
+      }
+    },
+    "logistic_regression": {
+      "backtest": {
+        "buy_hold_total_return": 4.425914181855144,
+        "exposure": 0.8675400291120815,
+        "periods": 687,
+        "strategy_total_return": 3.483071474888556,
+        "trades": 156
+      },
+      "classification": {
+        "accuracy": 0.6029112081513828,
+        "balanced_accuracy": 0.49853463521451746,
+        "log_loss": 0.6744285714025684,
+        "roc_auc": 0.4972228815740046
+      }
+    },
+    "majority_baseline": {
+      "backtest": {
+        "buy_hold_total_return": 4.425914181855144,
+        "exposure": 1.0,
+        "periods": 687,
+        "strategy_total_return": 4.423225755977432,
+        "trades": 1
+      },
+      "classification": {
+        "accuracy": 0.6104803493449782,
+        "balanced_accuracy": 0.5,
+        "log_loss": 0.6697914746089919,
+        "roc_auc": 0.4867780365288015
+      }
+    },
+    "random_forest": {
+      "backtest": {
+        "buy_hold_total_return": 4.425914181855144,
+        "exposure": 0.2328966521106259,
+        "periods": 687,
+        "strategy_total_return": 0.23014368275838204,
+        "trades": 162
+      },
+      "classification": {
+        "accuracy": 0.4978165938864629,
+        "balanced_accuracy": 0.4902316142428539,
+        "log_loss": 0.7059508800360735,
+        "roc_auc": 0.4927072128808113
+      }
+    }
+  },
+  "objective": "Predict whether SPY's close will be higher five trading sessions later.",
+  "status": "complete"
+}
