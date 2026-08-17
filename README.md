@@ -10,14 +10,32 @@ The objective is an experiment, not an assumption that prices are predictable. A
 
 Every weekday after the regular US market close, GitHub Actions:
 
-1. Downloads recent daily OHLCV data from Alpha Vantage.
+1. Downloads recent daily OHLCV data from Yahoo Finance.
 2. Rejects malformed dates, duplicate rows, invalid prices, and inconsistent OHLC values.
 3. Generates daily returns, intraday range, 20/50-day moving averages, and 20-day volatility.
 4. Writes one deterministic CSV per symbol under `data/`.
 5. Updates `metadata/data_quality.json` with row counts and quality checks.
 6. Commits only when the market dataset actually changed.
 
-The default universe is `SPY`, `QQQ`, `IWM`, `AAPL`, and `NVDA`. A one-time Yahoo Finance backfill supplies daily history from 2010, while Alpha Vantage's compact response supplies ongoing daily updates. Overlapping Alpha Vantage rows take precedence, and every row records its source.
+The default universe is `SPY`, `QQQ`, `IWM`, `AAPL`, and `NVDA`. Yahoo Finance supplies both the historical data from 2010 and ongoing daily updates. Each update refetches a seven-day overlap so recent corrections replace older values, and every row records its source.
+
+```text
+Scheduled GitHub Action
+        |
+        v
+Yahoo Finance chart endpoint
+        |
+        v
+Validate and merge OHLCV rows
+        |
+        v
+Rebuild lag-safe features and quality metadata
+        |
+        v
+Run tests, then commit only changed market data
+```
+
+The scheduled workflow uses no market-data API key or repository secret.
 
 ## Repository layout
 
@@ -33,12 +51,11 @@ The default universe is `SPY`, `QQQ`, `IWM`, `AAPL`, and `NVDA`. A one-time Yaho
 
 ## Setup
 
-Requires Python 3.11 or newer and an [Alpha Vantage API key](https://www.alphavantage.co/support/#api-key).
+Requires Python 3.11 or newer. No API key is required.
 
 PowerShell:
 
 ```powershell
-$env:ALPHA_VANTAGE_API_KEY = "your-key"
 $env:MARKET_SYMBOLS = "SPY,QQQ,IWM,AAPL,NVDA"
 python -m src.market_pipeline.pipeline
 ```
@@ -50,7 +67,7 @@ $env:PYTHONPATH = "src"
 python -m unittest discover -s tests -v
 ```
 
-For automation, create a GitHub Actions repository secret named `ALPHA_VANTAGE_API_KEY`, then run **Daily market data update** manually once from the Actions tab. Subsequent weekday runs use the schedule in the workflow.
+For automation, run **Daily market data update** manually once from the Actions tab. Subsequent weekday runs use the schedule in the workflow.
 
 ## Dataset schema
 
@@ -58,8 +75,8 @@ For automation, create a GitHub Actions repository secret named `ALPHA_VANTAGE_A
 | --- | --- |
 | `date`, `symbol` | Trading date and ticker |
 | `open`, `high`, `low`, `close`, `volume` | Daily market observations |
-| `adjusted_close` | Currently equal to close because the free daily endpoint is unadjusted |
-| `source` | `yahoo_finance_backfill`, `alpha_vantage`, or a legacy provenance marker |
+| `adjusted_close` | Yahoo Finance's split- and dividend-adjusted close when available |
+| `source` | `yahoo_finance_backfill`, `yahoo_finance`, or a legacy provenance marker |
 | `daily_return` | Close-to-close fractional return |
 | `range_pct` | `(high - low) / close` |
 | `sma_20`, `sma_50` | Trailing simple moving averages |
@@ -106,7 +123,7 @@ Evaluation includes accuracy, balanced accuracy, ROC-AUC, log loss, model exposu
 
 ## Scope and limitations
 
-This repository is an educational data-engineering and machine-learning project, not financial advice or a trading system. It does not claim that historical predictive performance will continue. Yahoo Finance and Alpha Vantage can differ in adjustment methodology, timing, and corrections; source provenance and the overlap policy make that limitation auditable.
+This repository is an educational data-engineering and machine-learning project, not financial advice or a trading system. It does not claim that historical predictive performance will continue. Yahoo Finance is an unofficial, best-effort data source whose availability, adjustment methodology, timing, and corrections can change; source provenance and the overlap policy make that limitation auditable.
 
 ## Research website
 

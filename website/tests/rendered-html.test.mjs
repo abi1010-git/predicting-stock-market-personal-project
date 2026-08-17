@@ -54,7 +54,7 @@ test("ships finished content and no starter preview", async () => {
   assert.match(layout, /og\.png/);
   assert.match(page, /<Dashboard \/>/);
   assert.match(dashboard, /YAHOO FINANCE/);
-  assert.match(dashboard, /ALPHA VANTAGE/);
+  assert.match(dashboard, /YAHOO FINANCE/);
   assert.match(dashboard, /RESEARCH, NOT RECOMMENDATION/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   assert.deepEqual(previewFiles, []);

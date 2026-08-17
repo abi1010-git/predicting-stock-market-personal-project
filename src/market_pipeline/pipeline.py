@@ -11,12 +11,12 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Iterable
 
 
-API_URL = "https://www.alphavantage.co/query"
+YAHOO_CHART_URL = "https://query1.finance.yahoo.com/v8/finance/chart"
 DEFAULT_SYMBOLS = ("SPY", "QQQ", "IWM", "AAPL", "NVDA")
 RAW_FIELDS = ("date", "symbol", "open", "high", "low", "close", "adjusted_close", "volume")
 PROVENANCE_FIELD = "source"
@@ -46,40 +46,42 @@ def _number(value: str, field: str, symbol: str) -> float:
     return result
 
 
-def parse_alpha_vantage_csv(payload: str, symbol: str) -> list[dict[str, object]]:
-    """Parse and validate an Alpha Vantage TIME_SERIES_DAILY CSV response."""
-    stripped = payload.lstrip()
-    if not stripped:
-        raise PipelineError(f"{symbol}: API returned an empty response")
-    if stripped.startswith("{"):
-        try:
-            message = json.loads(payload)
-        except json.JSONDecodeError:
-            message = payload[:200]
-        raise PipelineError(f"{symbol}: API returned an error response: {message}")
-
-    reader = csv.DictReader(io.StringIO(payload))
-    expected = {"timestamp", "open", "high", "low", "close", "volume"}
-    if not reader.fieldnames or not expected.issubset(reader.fieldnames):
-        raise PipelineError(f"{symbol}: unexpected API columns {reader.fieldnames}")
-
+def parse_yahoo_chart(payload: dict[str, object], symbol: str) -> list[dict[str, object]]:
+    """Parse and validate a Yahoo Finance chart response."""
+    chart = payload.get("chart")
+    if not isinstance(chart, dict):
+        raise PipelineError(f"{symbol}: Yahoo Finance returned an unexpected response")
+    if chart.get("error"):
+        raise PipelineError(f"{symbol}: Yahoo Finance error: {chart['error']}")
+    results = chart.get("result")
+    if not isinstance(results, list) or not results:
+        raise PipelineError(f"{symbol}: Yahoo Finance returned no history")
+    result = results[0]
+    try:
+        timestamps = result["timestamp"]
+        indicators = result["indicators"]
+        quote = indicators["quote"][0]
+        adjusted = (indicators.get("adjclose") or [{}])[0].get("adjclose", [])
+    except (KeyError, IndexError, TypeError) as exc:
+        raise PipelineError(f"{symbol}: Yahoo Finance response is missing price data") from exc
     rows: list[dict[str, object]] = []
     seen_dates: set[str] = set()
-    for source in reader:
-        row_date = source["timestamp"]
-        try:
-            date.fromisoformat(row_date)
-        except (TypeError, ValueError) as exc:
-            raise PipelineError(f"{symbol}: invalid date {row_date!r}") from exc
+    for index, timestamp in enumerate(timestamps):
+        row_date = datetime.fromtimestamp(timestamp, UTC).date().isoformat()
         if row_date in seen_dates:
             raise PipelineError(f"{symbol}: duplicate date {row_date}")
         seen_dates.add(row_date)
-
-        open_price = _number(source["open"], "open", symbol)
-        high = _number(source["high"], "high", symbol)
-        low = _number(source["low"], "low", symbol)
-        close = _number(source["close"], "close", symbol)
-        volume = int(_number(source["volume"], "volume", symbol))
+        try:
+            values = {field: quote[field][index] for field in ("open", "high", "low", "close", "volume")}
+        except (KeyError, IndexError, TypeError) as exc:
+            raise PipelineError(f"{symbol}: Yahoo Finance row {row_date} is incomplete") from exc
+        if any(value is None for value in values.values()):
+            continue
+        open_price = _number(values["open"], "open", symbol)
+        high = _number(values["high"], "high", symbol)
+        low = _number(values["low"], "low", symbol)
+        close = _number(values["close"], "close", symbol)
+        volume = int(_number(values["volume"], "volume", symbol))
         if min(open_price, high, low, close) <= 0 or volume < 0:
             raise PipelineError(f"{symbol}: prices must be positive and volume non-negative on {row_date}")
         if high < max(open_price, low, close) or low > min(open_price, high, close):
@@ -93,11 +95,11 @@ def parse_alpha_vantage_csv(payload: str, symbol: str) -> list[dict[str, object]
                 "high": high,
                 "low": low,
                 "close": close,
-                # TIME_SERIES_DAILY is split-unadjusted; retained as an explicit
-                # model-facing field so the source can be upgraded independently.
-                "adjusted_close": close,
+                "adjusted_close": _number(adjusted[index], "adjusted_close", symbol)
+                if index < len(adjusted) and adjusted[index] is not None
+                else close,
                 "volume": volume,
-                "source": "alpha_vantage",
+                "source": "yahoo_finance",
             }
         )
     if not rows:
@@ -126,23 +128,22 @@ def add_features(rows: list[dict[str, object]]) -> list[dict[str, object]]:
     return output
 
 
-def fetch_symbol(symbol: str, api_key: str, output_size: str = "compact") -> list[dict[str, object]]:
+def fetch_symbol(symbol: str, start: str = "2010-01-01") -> list[dict[str, object]]:
+    period1 = int(datetime.fromisoformat(start).replace(tzinfo=UTC).timestamp())
+    period2 = int(datetime.now(UTC).timestamp())
     query = urllib.parse.urlencode(
-        {
-            "function": "TIME_SERIES_DAILY",
-            "symbol": symbol,
-            "outputsize": output_size,
-            "datatype": "csv",
-            "apikey": api_key,
-        }
+        {"period1": period1, "period2": period2, "interval": "1d", "events": "history"}
     )
-    request = urllib.request.Request(f"{API_URL}?{query}", headers={"User-Agent": "daily-market-data-pipeline/1.0"})
+    request = urllib.request.Request(
+        f"{YAHOO_CHART_URL}/{urllib.parse.quote(symbol)}?{query}",
+        headers={"User-Agent": "Mozilla/5.0 daily-market-data-pipeline/1.0"},
+    )
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
-            payload = response.read().decode("utf-8")
-    except (urllib.error.URLError, TimeoutError) as exc:
+            payload = json.load(response)
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
         raise PipelineError(f"{symbol}: request failed: {exc}") from exc
-    return parse_alpha_vantage_csv(payload, symbol)
+    return parse_yahoo_chart(payload, symbol)
 
 
 def _format_value(value: object) -> object:
@@ -192,10 +193,13 @@ def read_existing_raw(path: Path, symbol: str) -> list[dict[str, object]]:
     return rows
 
 
-def update_symbol(symbol: str, api_key: str, data_dir: Path) -> PipelineResult:
+def update_symbol(symbol: str, data_dir: Path) -> PipelineResult:
     destination = data_dir / f"{symbol}.csv"
     existing = read_existing_raw(destination, symbol)
-    incoming = fetch_symbol(symbol, api_key)
+    start = "2010-01-01"
+    if existing:
+        start = (date.fromisoformat(str(existing[-1]["date"])) - timedelta(days=7)).isoformat()
+    incoming = fetch_symbol(symbol, start)
     merged = {str(row["date"]): row for row in existing}
     merged.update({str(row["date"]): row for row in incoming})
     raw_rows = [merged[row_date] for row_date in sorted(merged)]
@@ -237,7 +241,7 @@ def build_quality_report(results: list[PipelineResult], data_dir: Path) -> dict[
     }
 
 
-def run(symbols: Iterable[str], api_key: str, root: Path, request_delay: float = 1.0) -> bool:
+def run(symbols: Iterable[str], root: Path, request_delay: float = 1.0) -> bool:
     normalized = tuple(dict.fromkeys(symbol.strip().upper() for symbol in symbols if symbol.strip()))
     if not normalized:
         raise PipelineError("At least one symbol is required")
@@ -246,7 +250,7 @@ def run(symbols: Iterable[str], api_key: str, root: Path, request_delay: float =
     for index, symbol in enumerate(normalized):
         if index:
             time.sleep(request_delay)
-        results.append(update_symbol(symbol, api_key, data_dir))
+        results.append(update_symbol(symbol, data_dir))
 
     metadata_dir = root / "metadata"
     metadata_dir.mkdir(parents=True, exist_ok=True)
@@ -262,12 +266,9 @@ def run(symbols: Iterable[str], api_key: str, root: Path, request_delay: float =
 
 
 def main() -> int:
-    api_key = os.environ.get("ALPHA_VANTAGE_API_KEY", "").strip()
-    if not api_key:
-        raise PipelineError("ALPHA_VANTAGE_API_KEY is required")
     symbols = os.environ.get("MARKET_SYMBOLS", ",".join(DEFAULT_SYMBOLS)).split(",")
     root = Path(os.environ.get("PROJECT_ROOT", Path(__file__).resolve().parents[2]))
-    changed = run(symbols, api_key, root)
+    changed = run(symbols, root)
     print("Market dataset updated." if changed else "No new market data; repository unchanged.")
     return 0
 

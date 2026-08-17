@@ -30,7 +30,6 @@ jobs:
 
       - name: Fetch, validate, and build features
         env:
-          ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
           MARKET_SYMBOLS: SPY,QQQ,IWM,AAPL,NVDA
         run: python -m src.market_pipeline.pipeline
 

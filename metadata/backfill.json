@@ -1,6 +1,6 @@
 {
   "generated_at": "2026-08-16T19:56:20+00:00",
-  "overlap_policy": "Alpha Vantage rows take precedence",
+  "overlap_policy": "Existing rows take precedence during the one-time backfill",
   "provider": "Yahoo Finance chart endpoint",
   "purpose": "one-time historical research backfill",
   "start": "2010-01-01",

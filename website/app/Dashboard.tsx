@@ -79,7 +79,7 @@ export function Dashboard() {
       <section className="section system" id="system">
         <Reveal className="section-heading"><p className="eyebrow">01 / SYSTEM</p><h2>From raw prices to an auditable experiment.</h2><p>Each stage is separate, testable, and visible. Data lineage and leakage prevention are part of the product—not footnotes.</p></Reveal>
         <div className="pipeline-flow">
-          {[['01','INGEST','Yahoo backfill + Alpha Vantage daily OHLCV'],['02','VALIDATE','Schema, duplicates, nulls, price consistency'],['03','ENGINEER','Momentum, trend, volatility, volume signals'],['04','EVALUATE','Gap-aware walk-forward classification'],['05','REPORT','Metrics, benchmark and limitations']].map((item, i) => (
+          {[['01','INGEST','Yahoo Finance historical + daily OHLCV'],['02','VALIDATE','Schema, duplicates, nulls, price consistency'],['03','ENGINEER','Momentum, trend, volatility, volume signals'],['04','EVALUATE','Gap-aware walk-forward classification'],['05','REPORT','Metrics, benchmark and limitations']].map((item, i) => (
             <Reveal className="flow-node" key={item[0]}><span>{item[0]}</span><div className="node-dot" /><h3>{item[1]}</h3><p>{item[2]}</p>{i < 4 && <i className="connector" />}</Reveal>
           ))}
         </div>
@@ -103,7 +103,7 @@ export function Dashboard() {
 
       <section className="section data-section">
         <Reveal className="data-card"><p className="eyebrow">DATA QUALITY · 20,895 ROWS</p><strong>HEALTHY</strong><div className="quality-ring"><span>100<small>%</small></span></div><ul><li><span>Duplicate dates</span><b>0</b></li><li><span>Null prices</span><b>0</b></li><li><span>Assets monitored</span><b>5</b></li></ul></Reveal>
-        <Reveal className="data-copy"><p className="eyebrow">04 / TRANSPARENCY</p><h2>Built to be questioned.</h2><p>Every result should be reproducible from committed data and code. Historical rows are labeled by provider, overlapping daily observations prefer Alpha Vantage, and model performance is withheld until minimum sample requirements are met.</p><div className="source-tags"><span>YAHOO FINANCE · BACKFILL</span><span>ALPHA VANTAGE · DAILY</span><span>GITHUB ACTIONS · AUTOMATION</span></div></Reveal>
+        <Reveal className="data-copy"><p className="eyebrow">04 / TRANSPARENCY</p><h2>Built to be questioned.</h2><p>Every result should be reproducible from committed data and code. Historical and daily rows retain source provenance, recent observations are refreshed to capture corrections, and model performance is withheld until minimum sample requirements are met.</p><div className="source-tags"><span>YAHOO FINANCE · OHLCV</span><span>7-DAY · REFRESH</span><span>GITHUB ACTIONS · AUTOMATION</span></div></Reveal>
       </section>
 
       <section className="section final-section" id="about"><Reveal><p className="eyebrow">RESEARCH, NOT RECOMMENDATION</p><h2>A market model should communicate its limits as clearly as its signal.</h2><a className="primary" href="https://github.com/abi1010-git/predicting-stock-market-personal-project" target="_blank" rel="noreferrer">Inspect the repository ↗</a></Reveal></section>
