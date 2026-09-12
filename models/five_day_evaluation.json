@@ -22,67 +22,67 @@
     "volume_zscore_20d"
   ],
   "first_model_date": "2010-03-16",
-  "last_model_date": "2026-08-27",
-  "model_rows": 4139,
+  "last_model_date": "2026-09-02",
+  "model_rows": 4143,
   "models": {
     "catboost": {
       "backtest": {
-        "buy_hold_total_return": 4.414144564206317,
-        "exposure": 0.625544267053701,
-        "periods": 689,
-        "strategy_total_return": 1.821553670579747,
-        "trades": 253
+        "buy_hold_total_return": 4.420808780326966,
+        "exposure": 0.6391304347826087,
+        "periods": 690,
+        "strategy_total_return": 1.1072101592372432,
+        "trades": 201
       },
       "classification": {
-        "accuracy": 0.5645863570391872,
-        "balanced_accuracy": 0.511054544502603,
-        "log_loss": 0.7248746196019866,
-        "roc_auc": 0.5102272711192619
+        "accuracy": 0.5614492753623188,
+        "balanced_accuracy": 0.5065608465608465,
+        "log_loss": 0.724186549254304,
+        "roc_auc": 0.5107125220458555
       }
     },
     "logistic_regression": {
       "backtest": {
-        "buy_hold_total_return": 4.414144564206317,
-        "exposure": 0.8519593613933236,
-        "periods": 689,
-        "strategy_total_return": 3.085373392360273,
-        "trades": 177
+        "buy_hold_total_return": 4.420808780326966,
+        "exposure": 0.8478260869565217,
+        "periods": 690,
+        "strategy_total_return": 2.693626337873206,
+        "trades": 173
       },
       "classification": {
-        "accuracy": 0.6020319303338171,
-        "balanced_accuracy": 0.4995503679836534,
-        "log_loss": 0.675502650263792,
-        "roc_auc": 0.49558292261518155
+        "accuracy": 0.6017391304347826,
+        "balanced_accuracy": 0.49917989417989417,
+        "log_loss": 0.6754944915142577,
+        "roc_auc": 0.49561305114638443
       }
     },
     "majority_baseline": {
       "backtest": {
-        "buy_hold_total_return": 4.414144564206317,
+        "buy_hold_total_return": 4.420808780326966,
         "exposure": 1.0,
-        "periods": 689,
-        "strategy_total_return": 4.411450572989483,
+        "periods": 690,
+        "strategy_total_return": 4.4181448814536,
         "trades": 1
       },
       "classification": {
-        "accuracy": 0.6087082728592162,
+        "accuracy": 0.6086956521739131,
         "balanced_accuracy": 0.5,
-        "log_loss": 0.670305670511607,
-        "roc_auc": 0.4883003697524654
+        "log_loss": 0.6703270414430974,
+        "roc_auc": 0.48831746031746026
       }
     },
     "random_forest": {
       "backtest": {
-        "buy_hold_total_return": 4.414144564206317,
-        "exposure": 0.22060957910014514,
-        "periods": 689,
-        "strategy_total_return": 0.4556055305528448,
-        "trades": 168
+        "buy_hold_total_return": 4.420808780326966,
+        "exposure": 0.22753623188405797,
+        "periods": 690,
+        "strategy_total_return": 0.07468529876472885,
+        "trades": 160
       },
       "classification": {
-        "accuracy": 0.5013062409288824,
-        "balanced_accuracy": 0.49312392014025974,
-        "log_loss": 0.7049137886316403,
-        "roc_auc": 0.4939258995116663
+        "accuracy": 0.49594202898550727,
+        "balanced_accuracy": 0.4891269841269841,
+        "log_loss": 0.7049350898230229,
+        "roc_auc": 0.4950970017636684
       }
     }
   },
