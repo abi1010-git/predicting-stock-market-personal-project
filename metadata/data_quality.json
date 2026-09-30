@@ -1,16 +1,16 @@
 {
   "duplicates": 0,
-  "generated_at": "2026-09-29T02:34:33+00:00",
-  "latest_market_date": "2026-09-28",
+  "generated_at": "2026-09-30T02:05:45+00:00",
+  "latest_market_date": "2026-09-29",
   "null_prices": 0,
-  "rows": 21045,
+  "rows": 21050,
   "status": "healthy",
   "symbol_rows": {
-    "AAPL": 4209,
-    "IWM": 4209,
-    "NVDA": 4209,
-    "QQQ": 4209,
-    "SPY": 4209
+    "AAPL": 4210,
+    "IWM": 4210,
+    "NVDA": 4210,
+    "QQQ": 4210,
+    "SPY": 4210
   },
   "symbols": 5
 }
